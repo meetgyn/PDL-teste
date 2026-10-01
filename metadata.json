@@ -1,0 +1,6 @@
+{
+  "name": "Sentinela PLD/KYT - Sistema de Compliance & Screening Antilavagem",
+  "description": "Plataforma profissional de PLD/CFT e KYT integrada a BrasilAPI, Receita Federal, Portal da Transparência (CEIS/CNEP), PEP, TSE, OFAC/ONU e banco de dados MySQL com motor de risco e dossiês de auditoria.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
