@@ -173,9 +173,118 @@ app.get('/api/status', (req, res) => {
       { name: 'Portal da Transparência CGU (CEIS, CNEP, CEPIM, CEAF)', status: 'ready', type: 'REST/Token' },
       { name: 'OpenSanctions (OFAC, ONU, EU, PEPs)', status: 'ready', type: 'REST/Consolidated' },
       { name: 'Receita Federal Dados Abertos (Base Completa)', status: 'etl_ready', type: 'MySQL Batch LOAD DATA' },
-      { name: 'TSE Doadores & Candidaturas', status: 'ready', type: 'Dados Abertos / TSE' }
+      { name: 'TSE Doadores & Candidaturas', status: 'ready', type: 'Dados Abertos / TSE' },
+      { name: 'Banco Central do Brasil - Olinda DASFN (Catálogo SFN / Reguladas)', status: 'connected', type: 'OData REST', free: true }
     ]
   });
+});
+
+// Banco Central do Brasil - DASFN Olinda Helper & Registry
+const KNOWN_BCB_SFN: Record<string, any> = {
+  '59588111000103': {
+    razaoSocial: 'BANCO VOTORANTIM S.A.',
+    nomeFantasia: 'BANCO BV',
+    tipo: 'Banco Múltiplo',
+    segmento: 'S2',
+    situacao: 'AUTORIZADA A FUNCIONAR PELO BANCO CENTRAL DO BRASIL',
+    datasetUrl: 'https://dadosabertos.bcb.gov.br/dataset/ir-59588111000103',
+    ispb: '59588111',
+    codigoCompe: '655',
+    recursosDisponiveis: [
+      'Canais de Atendimento (Agências e Postos)',
+      'Pontos de Atendimento Pix Saque e Pix Troco',
+      'Tarifas e Pacotes de Serviços'
+    ]
+  },
+  '00000000000191': {
+    razaoSocial: 'BANCO DO BRASIL S.A.',
+    nomeFantasia: 'BANCO DO BRASIL',
+    tipo: 'Banco Múltiplo',
+    segmento: 'S1',
+    situacao: 'AUTORIZADA A FUNCIONAR PELO BANCO CENTRAL DO BRASIL',
+    datasetUrl: 'https://dadosabertos.bcb.gov.br/dataset/ir-00000000000191',
+    ispb: '00000000',
+    codigoCompe: '001',
+    recursosDisponiveis: ['Canais de Atendimento', 'Pix Saque e Troco', 'Tarifas']
+  },
+  '60701190000104': {
+    razaoSocial: 'BANCO ITAÚ UNIBANCO S.A.',
+    nomeFantasia: 'ITAÚ',
+    tipo: 'Banco Múltiplo',
+    segmento: 'S1',
+    situacao: 'AUTORIZADA A FUNCIONAR PELO BANCO CENTRAL DO BRASIL',
+    ispb: '60701190',
+    codigoCompe: '341',
+    recursosDisponiveis: ['Canais de Atendimento', 'Pix Saque e Troco']
+  },
+  '18236120000158': {
+    razaoSocial: 'NU PAGAMENTOS S.A. - INSTITUICAO DE PAGAMENTO',
+    nomeFantasia: 'NUBANK',
+    tipo: 'Instituição de Pagamento',
+    segmento: 'S3',
+    situacao: 'AUTORIZADA A FUNCIONAR PELO BANCO CENTRAL DO BRASIL',
+    ispb: '18236120',
+    codigoCompe: '260',
+    recursosDisponiveis: ['Canais de Atendimento Eletrônicos', 'Pix Saque e Troco']
+  },
+  '04913711000108': {
+    razaoSocial: 'BANCO DO ESTADO DO PARÁ S.A.',
+    nomeFantasia: 'BANPARÁ',
+    tipo: 'Banco Múltiplo Estadual',
+    segmento: 'S3',
+    situacao: 'AUTORIZADA A FUNCIONAR PELO BANCO CENTRAL DO BRASIL',
+    datasetUrl: 'https://dadosabertos.bcb.gov.br/dataset/ir-04913711000108',
+    resourceId: 'd6286b2b-aa8a-4703-b29e-7b410b379c89',
+    ispb: '04913711',
+    codigoCompe: '037',
+    recursosDisponiveis: [
+      'Canais de Atendimento (v2 - Agências e PABs)',
+      'Tabelas do Relatório de Pilar 3 (v2 - Risco & Capital)',
+      'Pontos de Atendimento Pix Saque e Pix Troco',
+      'Taxas de Conversão nos Cartões de Uso Internacional (v1)'
+    ]
+  }
+};
+
+async function checkBcbDasfn(cnpjClean: string) {
+  if (KNOWN_BCB_SFN[cnpjClean]) {
+    return {
+      isRegulatedSfn: true,
+      data: KNOWN_BCB_SFN[cnpjClean],
+      source: 'Banco Central do Brasil - DASFN Catálogo SFN'
+    };
+  }
+
+  // Attempt live call to Olinda BCB API
+  try {
+    const url = `https://olinda.bcb.gov.br/olinda/servico/DASFN/versao/v1/odata/Recursos?$format=json&$top=10&$filter=contains(Descricao,'${cnpjClean}')`;
+    const resp = await fetch(url, { headers: { 'User-Agent': 'Sentinela-PLD-BCB/1.0' } });
+    if (resp.ok) {
+      const json: any = await resp.json();
+      if (json.value && json.value.length > 0) {
+        return {
+          isRegulatedSfn: true,
+          data: json.value[0],
+          source: 'Banco Central do Brasil - Olinda DASFN (Live)'
+        };
+      }
+    }
+  } catch (e) {
+    console.warn('Erro ao consultar Olinda BCB DASFN:', e);
+  }
+
+  return {
+    isRegulatedSfn: false,
+    data: null,
+    source: 'Banco Central do Brasil - DASFN'
+  };
+}
+
+// Endpoint dedicado para consulta DASFN do Banco Central
+app.get('/api/bcb/dasfn/:cnpj', async (req, res) => {
+  const cnpjClean = cleanDoc(req.params.cnpj);
+  const result = await checkBcbDasfn(cnpjClean);
+  res.json(result);
 });
 
 // 2. Screening CNPJ (BrasilAPI + QSA + Sanctions + Risk Engine)
@@ -328,6 +437,20 @@ app.get('/api/screening/cnpj/:cnpj', async (req, res) => {
       };
     });
 
+    // Check Banco Central do Brasil - DASFN / SFN Registry
+    const bcbInfo = await checkBcbDasfn(cnpjClean);
+    if (bcbInfo.isRegulatedSfn) {
+      flags.push(`INSTITUIÇÃO REGULADA PELO BANCO CENTRAL: ${bcbInfo.data?.tipo || 'SFN'} - ${bcbInfo.data?.situacao || 'Autorizada a Funcionar'}`);
+      riskScore = Math.max(5, riskScore - 15); // Instituição com autorização formal do BCB tem governança e compliance regulado
+    } else {
+      // Se CNAE indica atividade financeira (Bancos, Financeiras, Factoring, Câmbio) mas não está no BCB
+      const isFinancialCnae = primaryCnaeStr.startsWith('64') || primaryCnaeStr.startsWith('66');
+      if (isFinancialCnae) {
+        riskScore += 25;
+        flags.push('ALERTA SFN: Atividade financeira/crédito declarada, porém sem registro de autorização localizado no DASFN/BCB (Possível Instituição Clandestina - Lei 7.492/86)');
+      }
+    }
+
     // Normalize score
     riskScore = Math.min(100, Math.max(0, riskScore));
 
@@ -346,7 +469,7 @@ app.get('/api/screening/cnpj/:cnpj', async (req, res) => {
       riskLevel,
       flags,
       operator: 'Analista de Compliance (Online)',
-      source: dataSource,
+      source: bcbInfo.isRegulatedSfn ? `${dataSource} + BCB DASFN` : dataSource,
       notes: `Screening executado para ${companyData.razao_social || 'PJ'}. Parecer preliminar gerado.`
     };
     auditLogs.unshift(auditRecord);
@@ -489,7 +612,30 @@ app.get('/api/screening/cnpj/:cnpj', async (req, res) => {
       left: '50%',
       top: '88%'
     });
-    edges.push(['root', 'reg_geo', 0]);
+    // Add BCB SFN Node if regulated
+    if (bcbInfo.isRegulatedSfn) {
+      nodes.push({
+        id: 'bcb_sfn',
+        type: 'asset',
+        label: `BCB: ${bcbInfo.data?.tipo || 'SFN'}`,
+        fullTitle: `Autorizada pelo Banco Central do Brasil - ${bcbInfo.data?.nomeFantasia || bcbInfo.data?.razaoSocial}`,
+        tag: 'REGULADA SFN',
+        confidence: '99%',
+        description: `Instituição do Sistema Financeiro Nacional catalogada no DASFN/BCB. ISPB: ${bcbInfo.data?.ispb || 'N/A'}. Situação: ${bcbInfo.data?.situacao}.`,
+        left: '16%',
+        top: '50%'
+      });
+      edges.push(['root', 'bcb_sfn', 0]);
+
+      evidenceLedger.push({
+        id: 'E-BCB-01',
+        evidence: 'Catálogo de Dados Abertos do Banco Central (DASFN - Instituições do SFN)',
+        nature: 'Direta',
+        independence: 'Alta',
+        confidence: '99%',
+        usage: 'Legitimidade Regulatória'
+      });
+    }
 
     // Compute attribution score
     const attributionConfidence = 92;
@@ -499,7 +645,8 @@ app.get('/api/screening/cnpj/:cnpj', async (req, res) => {
       company: {
         ...companyData,
         cnpj_formatado: formatted,
-        qsa: qsaPartners
+        qsa: qsaPartners,
+        bcbDasfn: bcbInfo
       },
       evaluation: {
         riskScore,

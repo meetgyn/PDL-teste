@@ -1,6 +1,7 @@
 import React from 'react';
-import { X, Printer, ShieldCheck, Download, Award, FileText, CheckCircle2 } from 'lucide-react';
+import { X, Printer, ShieldCheck, FileText } from 'lucide-react';
 import { CompanyData, EvaluationResult } from '../types/pld';
+import { useTheme } from '../context/ThemeContext';
 
 interface ComplianceReportModalProps {
   isOpen: boolean;
@@ -16,6 +17,9 @@ export const ComplianceReportModal: React.FC<ComplianceReportModalProps> = ({
   onClose,
   data
 }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   if (!isOpen || !data) return null;
 
   const { company, evaluation } = data;
@@ -26,29 +30,43 @@ export const ComplianceReportModal: React.FC<ComplianceReportModalProps> = ({
 
   const sha256Simulated = `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.slice(0, 40);
 
+  const modalBg = isDark
+    ? 'bg-slate-900 border-slate-800 text-slate-100'
+    : 'bg-white border-slate-200 text-slate-900';
+
+  const subBoxBg = isDark
+    ? 'bg-slate-950/80 border-slate-800 text-slate-200'
+    : 'bg-slate-50 border-slate-200 text-slate-800';
+
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-4xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+      <div className={`border rounded-xl max-w-4xl w-full shadow-xl overflow-hidden flex flex-col max-h-[90vh] ${modalBg}`}>
         {/* Modal Actions Bar (hidden when printing) */}
-        <div className="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between no-print">
+        <div className={`p-4 border-b flex items-center justify-between no-print ${
+          isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-100 border-slate-200'
+        }`}>
           <div className="flex items-center space-x-2">
-            <FileText className="w-4 h-4 text-blue-400" />
-            <span className="text-xs font-bold text-white uppercase tracking-wider">
-              Visualização de Dossiê de Compliance & PLD
+            <FileText className="w-4 h-4 text-slate-500" />
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              Dossiê de Conformidade PLD / CFT
             </span>
           </div>
 
           <div className="flex items-center space-x-2">
             <button
               onClick={handlePrint}
-              className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center space-x-1.5 shadow-sm transition-all cursor-pointer"
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition-all cursor-pointer ${
+                isDark ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-slate-900 hover:bg-slate-800 text-white'
+              }`}
             >
               <Printer className="w-3.5 h-3.5" />
               <span>Imprimir / Salvar PDF</span>
             </button>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-all cursor-pointer"
+              className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
+                isDark ? 'bg-slate-800 border-slate-700 text-slate-300' : 'bg-white border-slate-300 text-slate-700'
+              }`}
             >
               <X className="w-4 h-4" />
             </button>
@@ -56,69 +74,67 @@ export const ComplianceReportModal: React.FC<ComplianceReportModalProps> = ({
         </div>
 
         {/* Printable Dossier Content */}
-        <div className="p-8 overflow-y-auto bg-slate-900 text-slate-200 space-y-6 printable-area">
+        <div className="p-8 overflow-y-auto space-y-6 printable-area">
           {/* Header */}
-          <div className="border-b-2 border-slate-700 pb-5 flex flex-wrap items-start justify-between gap-4">
+          <div className="border-b pb-5 flex flex-wrap items-start justify-between gap-4 border-slate-700">
             <div>
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold">
-                  <ShieldCheck className="w-5 h-5" />
+                <div className="w-7 h-7 rounded bg-slate-800 flex items-center justify-center text-white">
+                  <ShieldCheck className="w-4 h-4" />
                 </div>
                 <div>
-                  <h1 className="text-lg font-black text-white tracking-wide uppercase">
-                    Dossiê Formal de Compliance PLD/CFT
+                  <h1 className="text-base font-bold tracking-wide uppercase">
+                    Dossiê de Compliance PLD/CFT
                   </h1>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-500">
                     Prevenção à Lavagem de Dinheiro e Financiamento do Terrorismo
                   </p>
                 </div>
               </div>
-              <p className="text-[11px] text-slate-400 mt-2">
+              <p className="text-[11px] text-slate-500 mt-2">
                 Em conformidade com a <strong>Circular BACEN nº 3.978/2020</strong> e <strong>Lei nº 9.613/1998</strong>
               </p>
             </div>
 
-            <div className="text-right text-xs space-y-1 font-mono">
+            <div className="text-right text-xs space-y-0.5 font-mono">
               <div>
-                <span className="text-slate-400">Emissão: </span>
-                <span className="text-white font-bold">{new Date().toLocaleString('pt-BR')}</span>
+                <span className="text-slate-500">Emissão: </span>
+                <span className="font-bold">{new Date().toLocaleString('pt-BR')}</span>
               </div>
               <div>
-                <span className="text-slate-400">Protocolo: </span>
-                <span className="text-blue-400 font-bold">{evaluation.auditLogId}</span>
+                <span className="text-slate-500">Protocolo: </span>
+                <span className="font-bold">{evaluation.auditLogId}</span>
               </div>
               <div>
-                <span className="text-slate-400">Hash SHA-256: </span>
-                <span className="text-slate-400 text-[10px]">{sha256Simulated}...</span>
+                <span className="text-slate-500">Hash SHA-256: </span>
+                <span className="text-[10px] text-slate-500">{sha256Simulated}...</span>
               </div>
             </div>
           </div>
 
           {/* Target Entity Overview */}
-          <div className="bg-slate-950/80 rounded-xl p-5 border border-slate-800 space-y-3">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              1. Identificação da Entidade Analisada (Pessoa Jurídica)
+          <div className={`rounded-xl p-5 border space-y-3 ${subBoxBg}`}>
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              1. Identificação da Entidade Analisada
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
               <div>
                 <span className="text-slate-500 block">Razão Social</span>
-                <span className="font-bold text-white block mt-0.5">{company.razao_social}</span>
+                <span className="font-bold block mt-0.5">{company.razao_social}</span>
               </div>
               <div>
                 <span className="text-slate-500 block">CNPJ</span>
-                <span className="font-mono font-bold text-white block mt-0.5">
+                <span className="font-mono font-bold block mt-0.5">
                   {company.cnpj_formatado || company.cnpj}
                 </span>
               </div>
               <div>
                 <span className="text-slate-500 block">Situação Cadastral</span>
-                <span className="font-bold text-emerald-400 block mt-0.5">
-                  {company.situacao_cadastral}
-                </span>
+                <span className="font-bold block mt-0.5">{company.situacao_cadastral}</span>
               </div>
               <div>
                 <span className="text-slate-500 block">Capital Social</span>
-                <span className="font-mono font-bold text-white block mt-0.5">
+                <span className="font-mono font-bold block mt-0.5">
                   {Number(company.capital_social || 0).toLocaleString('pt-BR', {
                     style: 'currency',
                     currency: 'BRL'
@@ -126,44 +142,29 @@ export const ComplianceReportModal: React.FC<ComplianceReportModalProps> = ({
                 </span>
               </div>
             </div>
-
-            <div className="pt-2 border-t border-slate-800/80 text-xs">
-              <span className="text-slate-500 block">Atividade Econômica Principal (CNAE):</span>
-              <span className="text-slate-300 font-medium">
-                {company.cnae_fiscal} - {company.cnae_fiscal_descricao}
-              </span>
-            </div>
           </div>
 
           {/* Risk Evaluation Matrix */}
-          <div className="bg-slate-950/80 rounded-xl p-5 border border-slate-800 space-y-4">
+          <div className={`rounded-xl p-5 border space-y-3 ${subBoxBg}`}>
             <div className="flex items-center justify-between">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 2. Avaliação de Risco & Parecer Conclusivo
               </h2>
-              <span
-                className={`px-3 py-1 rounded-full text-xs font-black ${
-                  evaluation.riskLevel === 'CRITICO'
-                    ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
-                    : evaluation.riskLevel === 'ALTO'
-                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
-                    : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                }`}
-              >
+              <span className="px-2 py-0.5 rounded text-xs font-bold border border-slate-600">
                 CLASSIFICAÇÃO: {evaluation.riskLevel} (SCORE {evaluation.riskScore}/100)
               </span>
             </div>
 
-            <div className="p-3.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-200">
+            <div className={`p-3 rounded-lg border text-xs ${modalBg}`}>
               <strong>Decisão Regulatória Recomendada:</strong> {evaluation.recommendation}
             </div>
 
             {evaluation.flags.length > 0 && (
               <div>
-                <span className="text-[11px] font-bold text-slate-400 block mb-1.5 uppercase">
+                <span className="text-[11px] font-bold text-slate-500 block mb-1 uppercase">
                   Fatores de Risco Identificados:
                 </span>
-                <ul className="list-disc list-inside space-y-1 text-xs text-slate-300">
+                <ul className="list-disc list-inside space-y-0.5 text-xs">
                   {evaluation.flags.map((flag, idx) => (
                     <li key={idx}>{flag}</li>
                   ))}
@@ -173,38 +174,31 @@ export const ComplianceReportModal: React.FC<ComplianceReportModalProps> = ({
           </div>
 
           {/* QSA Partners */}
-          <div className="bg-slate-950/80 rounded-xl p-5 border border-slate-800 space-y-3">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+          <div className={`rounded-xl p-5 border space-y-3 ${subBoxBg}`}>
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">
               3. Quadro Societário & Beneficiários Finais (UBO)
             </h2>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {(company.qsa || []).map((partner, idx) => (
                 <div
                   key={idx}
-                  className="p-3 rounded-lg bg-slate-900 border border-slate-800/80 flex items-center justify-between text-xs"
+                  className={`p-2.5 rounded-lg border flex items-center justify-between text-xs ${modalBg}`}
                 >
                   <div>
-                    <span className="font-bold text-white block">
-                      {partner.nome_socio || partner.nome}
-                    </span>
-                    <span className="text-slate-400 text-[11px]">
+                    <span className="font-bold block">{partner.nome_socio || partner.nome}</span>
+                    <span className="text-slate-500 text-[11px]">
                       {partner.qualificacao_socio} | Doc: {partner.cnpj_cpf_do_socio}
                     </span>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-1.5">
                     {partner.isPep && (
-                      <span className="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold text-[10px]">
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold border border-amber-500 text-amber-500">
                         PEP
                       </span>
                     )}
                     {partner.hasSanction && (
-                      <span className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold text-[10px]">
-                        SANCIONADO
-                      </span>
-                    )}
-                    {!partner.isPep && !partner.hasSanction && (
-                      <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px]">
-                        Regular
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold border border-rose-500 text-rose-500">
+                        SANÇÃO
                       </span>
                     )}
                   </div>
@@ -214,16 +208,16 @@ export const ComplianceReportModal: React.FC<ComplianceReportModalProps> = ({
           </div>
 
           {/* Signatures */}
-          <div className="pt-8 border-t border-slate-800 grid grid-cols-2 gap-8 text-center text-xs">
+          <div className="pt-6 border-t border-slate-700 grid grid-cols-2 gap-8 text-center text-xs">
             <div>
-              <div className="border-b border-slate-600 w-3/4 mx-auto mb-2"></div>
-              <p className="font-bold text-white">Analista de Compliance / PLD</p>
-              <p className="text-slate-500 text-[11px]">Assinatura Digital Verificada</p>
+              <div className="border-b border-slate-500 w-3/4 mx-auto mb-2"></div>
+              <p className="font-bold">Analista de Compliance / PLD</p>
+              <p className="text-slate-500 text-[11px]">Assinatura Digital</p>
             </div>
             <div>
-              <div className="border-b border-slate-600 w-3/4 mx-auto mb-2"></div>
-              <p className="font-bold text-white">Diretoria de Risco & Integridade</p>
-              <p className="text-slate-500 text-[11px]">Aprovação / Homologação</p>
+              <div className="border-b border-slate-500 w-3/4 mx-auto mb-2"></div>
+              <p className="font-bold">Diretoria de Risco & Integridade</p>
+              <p className="text-slate-500 text-[11px]">Homologação</p>
             </div>
           </div>
         </div>

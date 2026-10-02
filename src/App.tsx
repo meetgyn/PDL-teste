@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { Header } from './components/Header';
 import { ScreeningTab } from './components/ScreeningTab';
 import { AttributionGraphTab } from './components/AttributionGraphTab';
@@ -8,9 +9,12 @@ import { CodeAnalyzerTab } from './components/CodeAnalyzerTab';
 import { AuditLogsTab } from './components/AuditLogsTab';
 import { ComplianceReportModal } from './components/ComplianceReportModal';
 import { CompanyData, EvaluationResult } from './types/pld';
-import { Shield, Sparkles, Database, FileCheck } from 'lucide-react';
+import { Shield } from 'lucide-react';
 
-export default function App() {
+function MainApp() {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   const [activeTab, setActiveTab] = useState<string>('attribution');
   const [systemStatus, setSystemStatus] = useState<any>(null);
 
@@ -41,7 +45,11 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] text-slate-100 flex flex-col font-sans selection:bg-blue-600 selection:text-white">
+    <div className={`min-h-screen flex flex-col font-sans transition-colors ${
+      isDark
+        ? 'bg-[#080d1a] text-slate-100 selection:bg-blue-600 selection:text-white'
+        : 'bg-[#f8fafc] text-slate-900 selection:bg-slate-900 selection:text-white'
+    }`}>
       {/* Top Header */}
       <Header
         activeTab={activeTab}
@@ -72,21 +80,25 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-900 bg-slate-950/80 py-6 text-xs text-slate-500 no-print">
+      <footer className={`border-t py-5 text-xs no-print transition-colors ${
+        isDark
+          ? 'border-slate-800/80 bg-slate-950/80 text-slate-500'
+          : 'border-slate-200 bg-white text-slate-500'
+      }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center space-x-2">
-            <Shield className="w-4 h-4 text-blue-500" />
+            <Shield className="w-4 h-4 text-slate-400" />
             <span>
-              Sentinela PLD/KYT Compliance Suite • Suporte a MySQL, BrasilAPI, CGU, TSE, OFAC e ONU
+              Sentinela PLD/KYT Compliance Suite • MySQL, BrasilAPI, CGU, TSE, OFAC e ONU
             </span>
           </div>
 
-          <div className="flex items-center space-x-4 text-slate-400">
+          <div className="flex items-center space-x-4 opacity-75">
             <span>Circular BACEN 3.978</span>
             <span>•</span>
             <span>Lei 9.613/98 (Antilavagem)</span>
             <span>•</span>
-            <span>GAFI / FATF 40 Recomendações</span>
+            <span>GAFI / FATF</span>
           </div>
         </div>
       </footer>
@@ -98,5 +110,13 @@ export default function App() {
         data={lastDossier}
       />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ThemeProvider>
+      <MainApp />
+    </ThemeProvider>
   );
 }

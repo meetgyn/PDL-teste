@@ -1,5 +1,17 @@
 import React from 'react';
-import { ShieldCheck, Database, Search, Activity, FileCode, History, CheckCircle2, AlertTriangle, Share2 } from 'lucide-react';
+import {
+  ShieldCheck,
+  Database,
+  Search,
+  Activity,
+  FileCode,
+  History,
+  Share2,
+  Sun,
+  Moon,
+  FileText
+} from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 interface HeaderProps {
   activeTab: string;
@@ -19,147 +31,213 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenReport,
   canExportReport
 }) => {
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === 'dark';
+
   return (
-    <header className="border-b border-slate-800 bg-slate-900/95 backdrop-blur-md sticky top-0 z-40 no-print">
+    <header className={`border-b sticky top-0 z-40 no-print transition-colors ${
+      isDark
+        ? 'border-slate-800/80 bg-slate-950/95 text-slate-100 backdrop-blur-md'
+        : 'border-slate-200 bg-white/95 text-slate-900 backdrop-blur-md shadow-xs'
+    }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo & Platform Name */}
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-600 via-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20 ring-1 ring-blue-400/30">
-              <ShieldCheck className="w-6 h-6 text-white" />
+            <div className={`w-9 h-9 rounded-lg flex items-center justify-center border transition-colors ${
+              isDark
+                ? 'bg-slate-900 border-slate-700/80 text-blue-400'
+                : 'bg-slate-100 border-slate-300 text-blue-700 shadow-xs'
+            }`}>
+              <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+                <span className="font-bold text-base tracking-tight">
                   SENTINELA PLD/KYT
                 </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase tracking-wider">
-                  BACEN 3.978 / COAF
+                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border transition-colors ${
+                  isDark
+                    ? 'bg-slate-900 text-slate-400 border-slate-800'
+                    : 'bg-slate-100 text-slate-600 border-slate-200'
+                }`}>
+                  BACEN 3.978
                 </span>
               </div>
-              <p className="text-xs text-slate-400">
-                Sistema Integrado de Compliance, Triagem e Banco de Dados MySQL
+              <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                Sistema de Compliance & Investigação de Vínculos
               </p>
             </div>
           </div>
 
-          {/* Real-time Status Badges */}
-          <div className="hidden lg:flex items-center space-x-3 text-xs">
-            <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span className="font-medium">BrasilAPI & QSA</span>
+          {/* Right Controls: Badges + Theme Toggle + Report Button */}
+          <div className="flex items-center space-x-3">
+            {/* Status pills (sober) */}
+            <div className="hidden lg:flex items-center space-x-2 text-xs">
+              <div className={`flex items-center space-x-1.5 px-2.5 py-1 rounded border ${
+                isDark
+                  ? 'bg-slate-900/60 border-slate-800 text-slate-300'
+                  : 'bg-slate-50 border-slate-200 text-slate-700'
+              }`}>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                <span>BrasilAPI</span>
+              </div>
+
+              <div className={`flex items-center space-x-1.5 px-2.5 py-1 rounded border ${
+                isDark
+                  ? 'bg-slate-900/60 border-slate-800 text-slate-300'
+                  : 'bg-slate-50 border-slate-200 text-slate-700'
+              }`}>
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                <span>CGU (CEIS/CNEP)</span>
+              </div>
+
+              <div className={`flex items-center space-x-1.5 px-2.5 py-1 rounded border ${
+                isDark
+                  ? 'bg-slate-900/60 border-slate-800 text-slate-300'
+                  : 'bg-slate-50 border-slate-200 text-slate-700'
+              }`}>
+                <Database className="w-3.5 h-3.5 text-slate-400" />
+                <span>MySQL {systemStatus?.database?.configured ? 'Ativo' : 'Pronto'}</span>
+              </div>
             </div>
 
-            <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-blue-500/10 border border-blue-500/20 text-blue-400">
-              <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" />
-              <span className="font-medium">CGU (CEIS/CNEP)</span>
-            </div>
-
-            <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-purple-500/10 border border-purple-500/20 text-purple-400">
-              <CheckCircle2 className="w-3.5 h-3.5 text-purple-400" />
-              <span className="font-medium">OFAC / OpenSanctions</span>
-            </div>
-
-            <div className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-md border ${
-              systemStatus?.database?.configured
-                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-                : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
-            }`}>
-              <Database className="w-3.5 h-3.5" />
-              <span className="font-medium">
-                MySQL: {systemStatus?.database?.configured ? 'Conectado' : 'Pronto p/ Conexão'}
-              </span>
-            </div>
-          </div>
-
-          {/* Action button */}
-          {canExportReport && (
+            {/* Theme Toggle (Dark / Light) */}
             <button
-              onClick={onOpenReport}
-              className="inline-flex items-center px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-md shadow-blue-500/20 transition-all border border-blue-400/30 cursor-pointer"
+              onClick={toggleTheme}
+              aria-label="Alternar tema claro e escuro"
+              title={isDark ? 'Mudar para Versão Clara' : 'Mudar para Versão Escura'}
+              className={`p-2 rounded-lg border text-xs font-medium flex items-center space-x-1.5 transition-all cursor-pointer ${
+                isDark
+                  ? 'bg-slate-900 hover:bg-slate-800 border-slate-700 text-amber-300'
+                  : 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700'
+              }`}
             >
-              Exportar Dossiê PDF
+              {isDark ? (
+                <>
+                  <Sun className="w-4 h-4 text-amber-400" />
+                  <span className="hidden sm:inline text-slate-300">Modo Claro</span>
+                </>
+              ) : (
+                <>
+                  <Moon className="w-4 h-4 text-slate-700" />
+                  <span className="hidden sm:inline text-slate-700">Modo Escuro</span>
+                </>
+              )}
             </button>
-          )}
+
+            {/* Export Dossier button */}
+            {canExportReport && (
+              <button
+                onClick={onOpenReport}
+                className={`inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+                  isDark
+                    ? 'bg-blue-600 hover:bg-blue-500 text-white border-blue-500/30'
+                    : 'bg-blue-700 hover:bg-blue-800 text-white border-blue-800'
+                }`}
+              >
+                <FileText className="w-3.5 h-3.5 mr-1" />
+                <span>Dossiê PDF</span>
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Navigation Tabs */}
-        <nav className="flex space-x-1 overflow-x-auto pb-2 scrollbar-none">
+        {/* Navigation Tabs (Sober, Institutional) */}
+        <nav className="flex space-x-1 overflow-x-auto pb-2 scrollbar-none pt-1">
           <button
             onClick={() => setActiveTab('attribution')}
-            className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
               activeTab === 'attribution'
-                ? 'bg-pink-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                ? isDark
+                  ? 'bg-slate-800 text-white border border-slate-700'
+                  : 'bg-slate-900 text-white shadow-xs'
+                : isDark
+                ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
-            <Share2 className="w-4 h-4 text-pink-400" />
+            <Share2 className="w-3.5 h-3.5" />
             <span>Grafo & Atribuição PLD</span>
-            <span className="px-1.5 py-0.5 rounded-full bg-pink-500/20 text-pink-300 text-[10px] font-bold">
-              Seu MVP
-            </span>
           </button>
 
           <button
             onClick={() => setActiveTab('screening')}
-            className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
               activeTab === 'screening'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                ? isDark
+                  ? 'bg-slate-800 text-white border border-slate-700'
+                  : 'bg-slate-900 text-white shadow-xs'
+                : isDark
+                ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
-            <Search className="w-4 h-4" />
+            <Search className="w-3.5 h-3.5" />
             <span>Varredura 360° (CNPJ/CPF)</span>
           </button>
 
           <button
             onClick={() => setActiveTab('kyt')}
-            className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
               activeTab === 'kyt'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                ? isDark
+                  ? 'bg-slate-800 text-white border border-slate-700'
+                  : 'bg-slate-900 text-white shadow-xs'
+                : isDark
+                ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
-            <Activity className="w-4 h-4" />
+            <Activity className="w-3.5 h-3.5" />
             <span>Monitor KYT (Transações)</span>
           </button>
 
           <button
             onClick={() => setActiveTab('mysql')}
-            className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
               activeTab === 'mysql'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                ? isDark
+                  ? 'bg-slate-800 text-white border border-slate-700'
+                  : 'bg-slate-900 text-white shadow-xs'
+                : isDark
+                ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
-            <Database className="w-4 h-4" />
+            <Database className="w-3.5 h-3.5" />
             <span>Banco de Dados MySQL & ETL</span>
           </button>
 
           <button
             onClick={() => setActiveTab('code_analyzer')}
-            className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
               activeTab === 'code_analyzer'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                ? isDark
+                  ? 'bg-slate-800 text-white border border-slate-700'
+                  : 'bg-slate-900 text-white shadow-xs'
+                : isDark
+                ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
-            <FileCode className="w-4 h-4" />
-            <span>Análise do Seu Código / Scripts</span>
-            <span className="ml-1 px-1.5 py-0.2 bg-amber-500/20 text-amber-300 text-[10px] rounded font-semibold border border-amber-500/30">
-              Novo
-            </span>
+            <FileCode className="w-3.5 h-3.5" />
+            <span>Análise do Seu Código</span>
           </button>
 
           <button
             onClick={() => setActiveTab('audit')}
-            className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
               activeTab === 'audit'
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                ? isDark
+                  ? 'bg-slate-800 text-white border border-slate-700'
+                  : 'bg-slate-900 text-white shadow-xs'
+                : isDark
+                ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
-            <History className="w-4 h-4" />
+            <History className="w-3.5 h-3.5" />
             <span>Trilha de Auditoria</span>
           </button>
         </nav>

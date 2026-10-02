@@ -32,6 +32,11 @@ export interface CompanyData {
   cep?: string;
   cnaes_secundarios?: Array<{ codigo: number; descricao: string }>;
   qsa?: QsaPartner[];
+  bcbDasfn?: {
+    isRegulatedSfn: boolean;
+    data?: any;
+    source: string;
+  };
 }
 
 export interface EvaluationResult {
